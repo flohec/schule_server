@@ -1,0 +1,46 @@
+version: "3.8"
+
+services:
+  backend:
+    command: php artisan serve --host=0.0.0.0 --port=8000
+    build:
+      context: ./backend
+      dockerfile: ../docker/laravel/Dockerfile
+    container_name: laravel_app
+    working_dir: /var/www/html
+    volumes:
+      - ./backend:/var/www/html
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/react/Dockerfile
+    container_name: react_app
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules  # schützt die Container-Installation
+    ports:
+      - "5173:5173"
+    command: npm run dev -- --host
+
+  db:
+    image: mysql:8
+    container_name: mysql_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: schule_server
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: secret
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+
+volumes:
+  db_data:
